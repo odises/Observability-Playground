@@ -8,10 +8,6 @@ using OpenTelemetry.Trace;
 using OpenTracing;
 using System.Linq;
 using Microsoft.Extensions.Hosting;
-using Serilog.Configuration;
-using Microsoft.AspNetCore.Http;
-using Serilog.Core;
-using Serilog.Events;
 
 public static class HostingExtensions
 {
