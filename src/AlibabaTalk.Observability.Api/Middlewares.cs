@@ -45,8 +45,8 @@ public static class Middlewares
             {
                 await System.Threading.Tasks.Task.Delay(sleepBefore);
             }
-            await next();
 
+            await next();
 
             if (sleepAfter > 0)
             {

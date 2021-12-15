@@ -6,6 +6,7 @@ using Serilog;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTracing;
+using System.Linq;
 using Microsoft.Extensions.Hosting;
 
 public static class HostingExtensions
@@ -16,7 +17,9 @@ public static class HostingExtensions
        {
            cfg.ReadFrom.Configuration(ctx.Configuration)
                .Enrich.FromLogContext()
-               .Enrich.WithProperty("service_name", "gateway");
+               .Filter.ByExcluding(c => c.Properties.Any(p => p.Value.ToString().Contains("metrics")))
+               .Enrich.WithProperty("service_name", "gateway")
+               .Enrich.WithTraceIdentifier();
        });
     }
 
