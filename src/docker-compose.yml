@@ -1,0 +1,203 @@
+version: '3.3'
+services:
+  nginx:
+    container_name: nginx
+    image: nginx
+    ports:
+      - 8080:80
+    networks:
+      - net
+    links:
+      - gateway
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.1
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - ./AlibabaTalk.Observability.Elasticsearch/elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - net
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:7.4.0
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+    networks:
+      - net
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./AlibabaTalk.Observability.Prometheus/:/etc/prometheus/
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - 9090:9090
+    networks:
+      - net
+    restart: always
+
+  grafana:
+    image: grafana/grafana
+    volumes:
+      - ./AlibabaTalk.Observability.Grafana/:/etc/grafana/
+    user: "472"
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USERNAME=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - net
+    restart: always
+  rabbit:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      - net
+    environment:
+      - RABBITMQ_DEFAULT_USER=admin
+      - RABBITMQ_DEFAULT_PASS=admin
+  gateway:
+    container_name: gateway
+    links:
+      - zipkin
+      - rabbit
+      - worker1
+      - worker2
+    depends_on:
+      - rabbit
+      - worker1
+      - worker2
+    ports:
+      - 5000:80
+    networks:
+      - net
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - Rabbit__Host=rabbitmq
+      - Rabbit__Username=admin
+      - Rabbit__Password=admin
+      - Rabbit__Port=5672
+      - Zipkin__Address=http://zipkin:9411/api/v2/spans
+      - Dummy__Buggy=14985,12345,19843
+      - Serilog__WriteTo__0__Name=Elasticsearch
+      - Serilog__WriteTo__0__Args__nodeUris=http://elasticsearch:9200
+      - Serilog__WriteTo__0__Args__indexFormat=gateway-{0:yyyy.MM}
+    build:
+      context: ./AlibabaTalk.Observability.Api
+  dataprovider:
+    container_name: dataprovider
+    build:
+      context: ./AlibabaTalk.Observability.Data
+    environment:
+      - Hosting__Address=https://0.0.0.0:443
+      - Zipkin__Address=http://zipkin:9411/api/v2/spans
+      - Serilog__WriteTo__0__Name=Elasticsearch
+      - Serilog__WriteTo__0__Args__nodeUris=http://elasticsearch:9200
+      - Serilog__WriteTo__0__Args__indexFormat=data-provider-{0:yyyy.MM}
+    networks:
+      - net
+    ports:
+      - 443:443
+
+  zipkin:
+    container_name: zipkin
+    networks:
+      - net
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
+
+  worker1:
+    container_name: worker1
+    links:
+      - rabbit
+      - dataprovider
+      - zipkin
+    depends_on:
+      - rabbit
+      - dataprovider
+    networks:
+      - net
+    entrypoint:
+      - dotnet
+      - AlibabaTalk.Observability.Consumer.dll
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - GrpcEndpoint__Address=https://dataprovider:443
+      - Rabbit__Host=rabbitmq
+      - Rabbit__Username=admin
+      - Rabbit__Password=admin
+      - Rabbit__Port=5672
+      - Rabbit__Prefetch=3
+      - Zipkin__Address=http://zipkin:9411/api/v2/spans
+      - Hosting__Address=http://0.0.0.0/
+      - Serilog__WriteTo__0__Name=Elasticsearch
+      - Serilog__WriteTo__0__Args__nodeUris=http://elasticsearch:9200
+      - Serilog__WriteTo__0__Args__indexFormat=worker1-{0:yyyy.MM}
+    build:
+      context: ./AlibabaTalk.Observability.Consumer
+    ports:
+      - 3030:80
+
+  worker2:
+    container_name: worker2
+    links:
+      - rabbit
+      - dataprovider
+      - zipkin
+    depends_on:
+      - rabbit
+      - dataprovider
+    networks:
+      - net
+    entrypoint:
+      - dotnet
+      - AlibabaTalk.Observability.Consumer.dll
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - GrpcEndpoint__Address=https://dataprovider:443
+      - Rabbit__Host=rabbitmq
+      - Rabbit__Username=admin
+      - Rabbit__Password=admin
+      - Rabbit__Port=5672
+      - Rabbit__Prefetch=3
+      - Zipkin__Address=http://zipkin:9411/api/v2/spans
+      - Hosting__Address=http://0.0.0.0/
+      - Serilog__WriteTo__0__Name=Elasticsearch
+      - Serilog__WriteTo__0__Args__nodeUris=http://elasticsearch:9200
+      - Serilog__WriteTo__0__Args__indexFormat=worker2-{0:yyyy.MM}
+    build:
+      context: ./AlibabaTalk.Observability.Consumer
+    ports:
+      - 2020:80
+networks:
+  net:
+    driver: bridge
