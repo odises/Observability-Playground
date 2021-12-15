@@ -1,8 +1,6 @@
 using System;
 using System.Net.Http;
-
 using AlibabaTalk.Observability.Consumer;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +18,8 @@ public static class HostingExtensions
        {
            cfg.ReadFrom.Configuration(ctx.Configuration)
               .Enrich.FromLogContext()
-              .Enrich.WithProperty("service_name", workerName);
+              .Enrich.WithProperty("service_name", workerName)
+              .Enrich.WithTraceIdentifier();
        });
     }
 
