@@ -24,7 +24,8 @@ builder.Services.AddOpenTelemetryTracing((sp, cfg) =>
         .AddAspNetCoreInstrumentation()
         .AddZipkinExporter(z =>
         {
-            z.Endpoint = new Uri(configuration["Zipkin:Address"]?.ToString());
+            string zipkinAddress = configuration["Zipkin:Address"]?.ToString() ?? "http://localhost:9411/";
+            z.Endpoint = new Uri(zipkinAddress);
         });
 });
 
