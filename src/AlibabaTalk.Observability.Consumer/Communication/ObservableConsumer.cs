@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 using RabbitMQ.Client;
@@ -13,17 +14,22 @@ public class ObservableConsumer : AsyncEventingBasicConsumer
 {
     private static readonly ActivitySource ActivitySource = new(nameof(ObservableConsumer), "1.0.0");
     private readonly IModel channel;
+    private readonly ILogger logger;
     private readonly Func<object, BasicDeliverEventArgs, Task> handleMessageRecieved;
 
-    public ObservableConsumer(IModel channel, Func<object, BasicDeliverEventArgs, Task> handleMessageRecieved) : base(channel)
+    public ObservableConsumer(IModel channel, ILogger logger, Func<object, BasicDeliverEventArgs, Task> handleMessageRecieved) : base(channel)
     {
         this.Received += MessageReceived;
         this.channel = channel;
+        this.logger = logger;
         this.handleMessageRecieved = handleMessageRecieved;
     }
 
     private async Task MessageReceived(object sender, BasicDeliverEventArgs @event)
     {
+        string requestBody = Encoding.UTF8.GetString(@event.Body.ToArray());
+        logger?.LogInformation("work item received, content: " + requestBody);
+
         TextMapPropagator propagator = new TraceContextPropagator();
 
         var parentContext = propagator.Extract(default, @event.BasicProperties, ExtractTraceContextFromBasicProperties);
