@@ -198,7 +198,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum by(status_code) (request_duration_seconds_bucket{job=\"gateway-exporter\"})",
+          "expr": "sum by (status_code) (irate(request_duration_seconds_bucket{job=\"gateway-exporter\"}[$__interval]))",
           "interval": "",
           "legendFormat": "{{status_code}}",
           "refId": "A"
@@ -252,7 +252,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum by(IsSuccessful) (request_duration_seconds_bucket{job=\"workers-exporter\"})",
+          "expr": "sum by (IsSuccessful) (irate(request_duration_seconds_bucket{job=\"workers-exporter\"}[$__interval]))",
           "interval": "",
           "legendFormat": "{{IsSuccessful}}",
           "refId": "A"
