@@ -26,11 +26,11 @@ public class Rabbit
 
     public RabbitMQ.Client.IModel rabbitChannel { get; private set; }
 
-    public Rabbit(ILogger<Rabbit> logger, 
-                  IConfiguration configuration, 
-                  IHttpClientFactory httpClientFactory, 
-                  SearcherClient searcherClient, 
-                  MetricReporter metricReporter, 
+    public Rabbit(ILogger<Rabbit> logger,
+                  IConfiguration configuration,
+                  IHttpClientFactory httpClientFactory,
+                  SearcherClient searcherClient,
+                  MetricReporter metricReporter,
                   string clientName = "")
     {
         connectionFactory = new RabbitMQ.Client.ConnectionFactory()
@@ -74,7 +74,7 @@ public class Rabbit
                           noLocal: true,
                           exclusive: false,
                           arguments: default,
-                          consumer: new ObservableConsumer(rabbitChannel, HandleMessageRecieved),
+                          consumer: new ObservableConsumer(rabbitChannel, logger, HandleMessageRecieved),
                           consumerTag: "consumer");
     }
 
@@ -84,10 +84,10 @@ public class Rabbit
 
         var props = rabbitChannel.CreateBasicProperties();
         props.CorrelationId = eventArgs.BasicProperties.CorrelationId;
-        
+
         var stopWatch = Stopwatch.StartNew();
         bool isSuccessful = false;
-        
+
         try
         {
             SearchResponse response = await searcherClient.SearchAsync(
