@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Prometheus;
 using AlibabaTalk.Observability.Web;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 var appBuilder = WebApplication.CreateBuilder(args);
 appBuilder.Host.ConfigureAppConfiguration((context, cfg) =>
@@ -22,10 +23,10 @@ var app = appBuilder.Build();
 
 app.UseMetricServer();
 app.UseMiddleware<ResponseMetricMiddleware>();
+app.UseTraceIdentifierOnResponse();
 
 app.UseLoadTestMiddleware();
 
-app.UseTraceIdentifierOnResponse();
 
 app.UseExceptionHandler(new ExceptionHandlerOptions()
 {
@@ -33,10 +34,12 @@ app.UseExceptionHandler(new ExceptionHandlerOptions()
     {
         var exceptionObject = e.Features.Get<IExceptionHandlerFeature>();
 
+
         if (exceptionObject.Error is OperationCanceledException)
         {
             e.Response.StatusCode = 408;
-            e.Response.Headers.Add("traceId", System.Diagnostics.Activity.Current.Id);
+
+            var logger = e.RequestServices.GetService<ILogger<WebApplication>>();
 
             await e.Response.BodyWriter.WriteAsync(System.Text.Encoding.UTF8.GetBytes("timeout"));
             await e.Response.CompleteAsync();

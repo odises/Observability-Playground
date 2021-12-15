@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace OpenTracing;
 
@@ -10,8 +11,15 @@ public class TestController : Controller
 
     [HttpGet]
     [Route("search")]
-    public async Task<IActionResult> Test([FromQuery] string[] queries, [FromServices] SearchService searchService)
+    public async Task<IActionResult> Test([FromQuery] string[] queries, [FromServices] SearchService searchService, [FromServices] ILogger<TestController> logger)
     {
+        if (!(queries?.Count() > 0))
+        {
+            return BadRequest();
+        }
+
+        logger?.LogInformation("gateway request received");
+
         foreach (var queryItem in queries)
         {
             if (!string.IsNullOrWhiteSpace(queryItem))
