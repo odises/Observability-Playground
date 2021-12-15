@@ -51,6 +51,7 @@ services:
       - ./AlibabaTalk.Observability.Prometheus/:/etc/prometheus/
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.enable-admin-api"
     ports:
       - 9090:9090
     networks:

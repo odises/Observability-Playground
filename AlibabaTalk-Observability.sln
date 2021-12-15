@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlibabaTalk.Observability.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlibabaTalk.Observability.Data", "src\AlibabaTalk.Observability.Data\AlibabaTalk.Observability.Data.csproj", "{8186EB89-899F-4039-9448-E1DF42758558}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlibabaTalk.Observability.Web", "src\AlibabaTalk.Observability.Web\AlibabaTalk.Observability.Web.csproj", "{25FC52EA-6D6E-424D-862E-2370FAB9E18C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlibabaTalk.Observability.Api", "src\AlibabaTalk.Observability.Api\AlibabaTalk.Observability.Api.csproj", "{25FC52EA-6D6E-424D-862E-2370FAB9E18C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

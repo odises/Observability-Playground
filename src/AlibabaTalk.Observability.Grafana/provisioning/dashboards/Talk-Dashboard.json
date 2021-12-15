@@ -1,25 +1,4 @@
 {
-  "__inputs": [],
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "8.2.2"
-    },
-    {
-      "type": "panel",
-      "id": "heatmap",
-      "name": "Heatmap",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "piechart",
-      "name": "Pie chart",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -43,7 +22,6 @@
   "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -80,14 +58,78 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(increase(request_duration_seconds_bucket{status_code=\"200\"}[$__interval])) by (le) ",
+          "expr": "sum(increase(request_duration_seconds_bucket{status_code=\"200\", job=\"gateway-exporter\"}[$__interval])) by (le) ",
           "format": "heatmap",
           "interval": "",
           "legendFormat": "{{le}}",
           "refId": "A"
         }
       ],
-      "title": "Performance",
+      "title": "Performance (Gateway)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": null,
+        "format": "short",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "sqrt",
+        "colorScheme": "interpolatePurples",
+        "exponent": 0.5,
+        "mode": "spectrum"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": null,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 7,
+      "interval": "15s",
+      "legend": {
+        "show": false
+      },
+      "maxDataPoints": 25,
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(increase(request_duration_seconds_bucket{IsSuccessful=\"True\", job=\"workers-exporter\"}[$__interval])) by (le) ",
+          "format": "heatmap",
+          "interval": "",
+          "legendFormat": "{{le}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Performance (Workers)",
       "tooltip": {
         "show": true,
         "showHistogram": false
@@ -156,13 +198,67 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum by(status_code) (request_duration_seconds_bucket)",
+          "expr": "sum by(status_code) (request_duration_seconds_bucket{job=\"gateway-exporter\"})",
           "interval": "",
           "legendFormat": "{{status_code}}",
           "refId": "A"
         }
       ],
-      "title": "Status Codes",
+      "title": "Gateway Status Codes",
+      "type": "piechart"
+    },
+    {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum by(IsSuccessful) (request_duration_seconds_bucket{job=\"workers-exporter\"})",
+          "interval": "",
+          "legendFormat": "{{IsSuccessful}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Workers success",
       "type": "piechart"
     }
   ],
@@ -181,5 +277,5 @@
   "timezone": "",
   "title": "Talk Dashboard",
   "uid": "5zRQQlhnk",
-  "version": 5
+  "version": 1
 }

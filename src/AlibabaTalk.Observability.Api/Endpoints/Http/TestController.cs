@@ -10,11 +10,8 @@ public class TestController : Controller
 
     [HttpGet]
     [Route("search")]
-    public async Task<IActionResult> Test([FromQuery] string query, [FromServices] SearchService searchService)
+    public async Task<IActionResult> Test([FromQuery] string[] queries, [FromServices] SearchService searchService)
     {
-        string[] queries = query?.Split("|")?.Select(x => x?.Trim())?.Where(x => !string.IsNullOrEmpty(x))?.ToArray();
-
-
         foreach (var queryItem in queries)
         {
             if (!string.IsNullOrWhiteSpace(queryItem))
